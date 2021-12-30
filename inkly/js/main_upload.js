@@ -128,14 +128,21 @@ const HEIGHT = 800;
             context.drawImage(outputCanvas,-outputCanvas.width/2,-outputCanvas.height/2);
             // we’re done with the rotating so restore the unrotated context
             context.restore();
-            var data = rotateCanvas.toBmp();
-            var arrayBuffer = new ArrayBuffer(data.length);
-            var dataView = new DataView(arrayBuffer);
-            for(var i = 0; i < data.length; i ++) {
-                dataView.setUint8(i, data[i]);
-            }
-            var blob = new Blob([dataView], {type: "application/octet-stream"});
-            saveAs(blob, "test.bmp");
+            //var data = rotateCanvas.toBmp();
+            const data = rotateCanvas.toBlob((blob)=>{
+                //saveAs(blob, "test.png");
+                const formData = new FormData()
+                formData.append('file', blob, 'test.png');
+                fetch('http://192.168.1.75:44444/test.bmp', {
+                    method: 'POST',
+                    body: formData
+                })
+                    .then(r => r.json())
+                    .then(data => {
+                        console.log(data)
+                    })
+            },'image/png');
+
         }
 
         window.addEventListener('click', saveData);
