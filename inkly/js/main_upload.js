@@ -133,7 +133,7 @@ const HEIGHT = 800;
                 //saveAs(blob, "test.png");
                 const formData = new FormData()
                 formData.append('file', blob, 'test.png');
-                fetch('http://192.168.1.75:44444/test.bmp', {
+                fetch('http://eink.hopto.org:44444/test.bmp', {
                     method: 'POST',
                     body: formData
                 })
