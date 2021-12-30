@@ -111,7 +111,24 @@ const HEIGHT = 800;
         }
 
         function saveData() {
-            var data = outputCanvas.toBmp();
+            const rotateCanvas = document.createElement('canvas');
+            rotateCanvas.width = outputCanvas.height;
+            rotateCanvas.height = outputCanvas.width;
+            const context = rotateCanvas.getContext('2d');
+            context.clearRect(0,0,rotateCanvas.width,rotateCanvas.height);
+            // save the unrotated context of the canvas so we can restore it later
+            // the alternative is to untranslate & unrotate after drawing
+            context.save();
+            // move to the center of the canvas
+            context.translate(rotateCanvas.width/2,rotateCanvas.height/2);
+            // rotate the canvas to the specified degrees
+            context.rotate(270*Math.PI/180);
+            // draw the image
+            // since the context is rotated, the image will be rotated also
+            context.drawImage(outputCanvas,-outputCanvas.width/2,-outputCanvas.height/2);
+            // we’re done with the rotating so restore the unrotated context
+            context.restore();
+            var data = rotateCanvas.toBmp();
             var arrayBuffer = new ArrayBuffer(data.length);
             var dataView = new DataView(arrayBuffer);
             for(var i = 0; i < data.length; i ++) {
