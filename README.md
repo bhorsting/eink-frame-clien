@@ -1,1 +1,1 @@
-# eink-frame-clien
+# eink-frame-client
