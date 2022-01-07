@@ -110,7 +110,7 @@ const HEIGHT = 800;
             ctxOut.putImageData(imageData, 0, 0);
         }
 
-        function saveData() {
+        async function saveData() {
             const rotateCanvas = document.createElement('canvas');
             rotateCanvas.width = outputCanvas.height;
             rotateCanvas.height = outputCanvas.width;
@@ -129,19 +129,60 @@ const HEIGHT = 800;
             // we’re done with the rotating so restore the unrotated context
             context.restore();
             //var data = rotateCanvas.toBmp();
-            const data = rotateCanvas.toBlob((blob)=>{
-                //saveAs(blob, "test.png");
-                const formData = new FormData()
-                formData.append('file', blob, 'test.png');
-                fetch('http://eink.hopto.org:44444/test.bmp', {
-                    method: 'POST',
-                    body: formData
-                })
-                    .then(r => r.json())
-                    .then(data => {
-                        console.log(data)
-                    })
-            },'image/png');
+            const dataString = rotateCanvas.toDataURL('image/png');
+            const blob = dataURItoBlob(dataString);
+            //saveAs(blob, "test.png");
+            const data = new FormData()
+            const fileOfBlob = new File([blob], 'test.png');
+            data.append('image', fileOfBlob)
+            const response = await fetch('https://www.bas-horsting.com/einkupload/upload', {
+                method: 'POST',
+                mode: 'no-cors',
+                body: data
+            });
+            console.log(response);
+        }
+
+        function initWorker() {
+            worker = new Worker("pngquant/worker.js");
+            worker.onmessage = function(event) {
+                const message = event.data;
+                if (message.type == "stdout") {
+                    console.log(message.data);
+                } else if (message.type == "start") {
+                    console.log("Worker has received command");
+                } else if (message.type == "done") {
+                    console.log("Conversion is done");
+                    var buffers = message.data;
+                    buffers && buffers.forEach(function(file) {
+                        $('#output-img').src = getDownloadLink(file.data, 'output.png');
+                    });
+                }
+            };
+        }
+
+        function dataURItoBlob(dataURI) {
+            // convert base64 to raw binary data held in a string
+            // doesn't handle URLEncoded DataURIs - see SO answer #6850276 for code that does this
+            const byteString = atob(dataURI.split(',')[1]);
+
+            // separate out the mime component
+            const mimeString = dataURI.split(',')[0].split(':')[1].split(';')[0];
+
+            // write the bytes of the string to an ArrayBuffer
+            const ab = new ArrayBuffer(byteString.length);
+
+            // create a view into the buffer
+            const ia = new Uint8Array(ab);
+
+            // set the bytes of the buffer to the correct values
+            for (let i = 0; i < byteString.length; i++) {
+                ia[i] = byteString.charCodeAt(i);
+            }
+
+            // write the ArrayBuffer to a blob, and you're done
+            const blob = new Blob([ab], {type: mimeString});
+            return blob;
 
         }
 

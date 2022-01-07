@@ -11,17 +11,17 @@
 //   [ 16,  8, 14,  6 ]
 // ];
 
-var bayerThresholdMap = [
-    [  15, 135,  45, 165 ],
-    [ 195,  75, 225, 105 ],
-    [  60, 180,  30, 150 ],
-    [ 240, 120, 210,  90 ]
+const bayerThresholdMap = [
+    [15, 135, 45, 165],
+    [195, 75, 225, 105],
+    [60, 180, 30, 150],
+    [240, 120, 210, 90]
 ];
 
-var lumR = [];
-var lumG = [];
-var lumB = [];
-for (var i=0; i<256; i++) {
+const lumR = [];
+const lumG = [];
+const lumB = [];
+for (let i=0; i<256; i++) {
     lumR[i] = i*0.299;
     lumG[i] = i*0.587;
     lumB[i] = i*0.114;
@@ -29,26 +29,26 @@ for (var i=0; i<256; i++) {
 
 function monochrome(imageData, threshold, type){
 
-    var imageDataLength = imageData.data.length;
+    const imageDataLength = imageData.data.length;
 
     // Greyscale luminance (sets r pixels to luminance of rgb)
-    for (var i = 0; i <= imageDataLength; i += 4) {
+    for (let i = 0; i <= imageDataLength; i += 4) {
         imageData.data[i] = Math.floor(lumR[imageData.data[i]] + lumG[imageData.data[i+1]] + lumB[imageData.data[i+2]]);
     }
 
-    var w = imageData.width;
-    var newPixel, err;
+    const w = imageData.width;
+    let newPixel, err;
 
-    for (var currentPixel = 0; currentPixel <= imageDataLength; currentPixel+=4) {
+    for (let currentPixel = 0; currentPixel <= imageDataLength; currentPixel+=4) {
 
         if (type === "none") {
             // No dithering
             imageData.data[currentPixel] = imageData.data[currentPixel] < threshold ? 0 : 255;
         } else if (type === "bayer") {
             // 4x4 Bayer ordered dithering algorithm
-            var x = currentPixel/4 % w;
-            var y = Math.floor(currentPixel/4 / w);
-            var map = Math.floor( (imageData.data[currentPixel] + bayerThresholdMap[x%4][y%4]) / 2 );
+            const x = currentPixel / 4 % w;
+            const y = Math.floor(currentPixel / 4 / w);
+            const map = Math.floor((imageData.data[currentPixel] + bayerThresholdMap[x % 4][y % 4]) / 2);
             imageData.data[currentPixel] = (map < threshold) ? 0 : 255;
         } else if (type === "floydsteinberg") {
             // Floyd–Steinberg dithering algorithm
