@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Title</title>
+    <link rel="stylesheet" href="index.css">
     <script src='js/fileSaver.js'></script>
     <script src='js/autoluma.js'></script>
     <script src='js/dither1.js'></script>
@@ -10,7 +11,30 @@
     <script src='js/main_upload.js'></script>
 </head>
 <body>
-    <video id="video" style="display: none" width="480" height="800"></video>
-    <canvas id="outputCanvas" style="width:100%; height: 100%"></canvas>
+<video id="video" style="display: none" width="480" height="800"></video>
+<canvas id="outputCanvas"></canvas>
+<svg id="interface_svg" width="100%" height="100%">
+    <g id="recordButton">
+        <circle r="25" fill="red" cx="50%" cy="70%" stroke="pink" stroke-width="10" opacity="80%"></circle>
+    </g>
+    <g id="accept_ui">
+        <g id="accept">
+            <circle r="25" fill="green" cx="75%" cy="70%" stroke="lightgreen" stroke-width="10" opacity="80%"></circle>
+            <g transform="matrix(1,0,0,1,-12,-12)">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" x="75%" y="70%">
+                    <path fill="white" d="M20.285 2l-11.285 11.567-5.286-5.011-3.714 3.716 9 8.728 15-15.285z"/>
+                </svg>
+            </g>
+        </g>
+        <g id="reject">
+            <circle r="25" fill="red" cx="25%" cy="70%" stroke="pink" stroke-width="10" opacity="80%"></circle>
+            <g transform="matrix(1,0,0,1,-12,-12)">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" x="25%" y="70%">
+                    <path fill="white" d="M24 20.188l-8.315-8.209 8.2-8.282-3.697-3.697-8.212 8.318-8.31-8.203-3.666 3.666 8.321 8.24-8.206 8.313 3.666 3.666 8.237-8.318 8.285 8.203z"/>
+                </svg>
+            </g>
+        </g>
+    </g>
+</svg>
 </body>
 </html>

@@ -1,0 +1,22 @@
+#interface_svg {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    z-index: 2;
+}
+
+html, body {
+    padding: 0;
+    margin: 0;
+    overflow: hidden;
+}
+
+#accept_ui {
+    visibility: hidden;
+}
+
+#outputCanvas {
+    width: 100vw;
+    height: 100vh;
+    object-fit: contain;
+}

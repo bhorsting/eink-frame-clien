@@ -1,34 +1,37 @@
 const WIDTH = 480;
 const HEIGHT = 800;
 (function () {
+    let updating = true;
     window.addEventListener('DOMContentLoaded', async () => {
-        var bradleyThresholder = new ocr.BradleyThreshold(),
-            canvas = document.createElement('canvas'),
-            video = document.getElementById("video"),
-            outputCanvas,
-            ctxOut,
-            videoObj = {
-                video: {
-                    facingMode: {exact: 'environment'},
-                    width: {
-                        min: 1280
-                    },
-                    height: {
-                        min: 720
-                    },
+        const recordButton = document.getElementById('recordButton');
+        const acceptUI = document.getElementById('accept_ui');
+        const acceptButton = document.getElementById('accept');
+        const rejectButton = document.getElementById('reject');
+        const canvas = document.createElement('canvas');
+        const video = document.getElementById("video");
+        let outputCanvas;
+        let ctxOut;
+        const videoObj = {
+            video: {
+                facingMode: {exact: 'environment'},
+                width: {
+                    min: 1280
                 },
-                audio: false,
+                height: {
+                    min: 720
+                },
             },
-            ctx = canvas.getContext('2d'),
-            errBack = function (error) {
-                console.log("Video capture error: ", error.code);
-            };
+            audio: false,
+        };
+        const ctx = canvas.getContext('2d');
+
 
         outputCanvas = document.getElementById('outputCanvas');
         ctxOut = outputCanvas.getContext('2d');
+
         // Put video listeners into place
 
-        function debug(txt){
+        function debug(txt) {
             return;
             const div = document.createElement('div');
             div.innerText = txt;
@@ -38,7 +41,7 @@ const HEIGHT = 800;
         if (navigator.getUserMedia) { // Standard
 
             /* get user's permission to muck around with video devices */
-            const tempStream = await navigator.mediaDevices.getUserMedia({video:true, audio: false});
+            const tempStream = await navigator.mediaDevices.getUserMedia({video: true, audio: false});
             const devices = await navigator.mediaDevices.enumerateDevices();
             let frontDeviceId
             let backDeviceId
@@ -48,13 +51,13 @@ const HEIGHT = 800;
                 backDeviceId = devices[0].deviceId;
             }
             /* look for front and back devices */
-            devices.forEach (device => {
-                if( device.kind === 'videoinput' ) {
+            devices.forEach(device => {
+                if (device.kind === 'videoinput') {
                     debug(device.label + device.deviceId);
-                    if( device.label && device.label.length > 0 ) {
-                        if( device.label.toLowerCase().indexOf( 'back' ) >= 0 )
+                    if (device.label && device.label.length > 0) {
+                        if (device.label.toLowerCase().indexOf('back') >= 0)
                             backDeviceId = device.deviceId
-                        else if( device.label.toLowerCase().indexOf( 'front' ) >= 0 )
+                        else if (device.label.toLowerCase().indexOf('front') >= 0)
                             frontDeviceId = device.deviceId
                     }
                 }
@@ -64,8 +67,8 @@ const HEIGHT = 800;
 
             /* close the temp stream */
             const tracks = tempStream.getTracks()
-            if( tracks )
-                for( let t = 0; t < tracks.length; t++ ) tracks[t].stop()
+            if (tracks)
+                for (let t = 0; t < tracks.length; t++) tracks[t].stop()
             /* open the device you want */
             const constraints = {
                 video: {
@@ -73,27 +76,25 @@ const HEIGHT = 800;
                 }
             };
 
-            debug( `CHOSEN ${constraints.video.deviceId}`);
-
-
+            debug(`CHOSEN ${constraints.video.deviceId}`);
             const stream = await navigator.mediaDevices.getUserMedia(constraints);
-
-
             video.srcObject = stream;
             video.onloadedmetadata = (e) => {
                 video.play();
-                setInterval( () =>{
-                    canvas.width = WIDTH;
-                    canvas.height = HEIGHT;
-                    outputCanvas.width = WIDTH;
-                    outputCanvas.height = HEIGHT;
-                    // get the scale
-                    var scale = Math.max(canvas.width / video.videoWidth, canvas.height / video.videoHeight);
-                    // get the top left position of the image
-                    var x = (canvas.width / 2) - (video.videoWidth / 2) * scale;
-                    var y = (canvas.height / 2) - (video.videoHeight / 2) * scale;
-                    ctx.drawImage(video, x, y, video.videoWidth * scale, video.videoHeight * scale);
-                    process();
+                setInterval(() => {
+                    if (updating) {
+                        canvas.width = WIDTH;
+                        canvas.height = HEIGHT;
+                        outputCanvas.width = WIDTH;
+                        outputCanvas.height = HEIGHT;
+                        // get the scale
+                        const scale = Math.max(canvas.width / video.videoWidth, canvas.height / video.videoHeight);
+                        // get the top left position of the image
+                        const x = (canvas.width / 2) - (video.videoWidth / 2) * scale;
+                        const y = (canvas.height / 2) - (video.videoHeight / 2) * scale;
+                        ctx.drawImage(video, x, y, video.videoWidth * scale, video.videoHeight * scale);
+                        process();
+                    }
                 }, 50);
             };
 
@@ -102,7 +103,7 @@ const HEIGHT = 800;
         }
 
         function process() {
-            var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
             //bradleyThresholder.setImageData(imageData);
             //bradleyThresholder.process();
             //autoluma(imageData, 0.5, canvas.width, canvas.height);
@@ -115,17 +116,17 @@ const HEIGHT = 800;
             rotateCanvas.width = outputCanvas.height;
             rotateCanvas.height = outputCanvas.width;
             const context = rotateCanvas.getContext('2d');
-            context.clearRect(0,0,rotateCanvas.width,rotateCanvas.height);
+            context.clearRect(0, 0, rotateCanvas.width, rotateCanvas.height);
             // save the unrotated context of the canvas so we can restore it later
             // the alternative is to untranslate & unrotate after drawing
             context.save();
             // move to the center of the canvas
-            context.translate(rotateCanvas.width/2,rotateCanvas.height/2);
+            context.translate(rotateCanvas.width / 2, rotateCanvas.height / 2);
             // rotate the canvas to the specified degrees
-            context.rotate(270*Math.PI/180);
+            context.rotate(270 * Math.PI / 180);
             // draw the image
             // since the context is rotated, the image will be rotated also
-            context.drawImage(outputCanvas,-outputCanvas.width/2,-outputCanvas.height/2);
+            context.drawImage(outputCanvas, -outputCanvas.width / 2, -outputCanvas.height / 2);
             // we’re done with the rotating so restore the unrotated context
             context.restore();
             //var data = rotateCanvas.toBmp();
@@ -140,12 +141,13 @@ const HEIGHT = 800;
                 mode: 'no-cors',
                 body: data
             });
+            resumeRecording();
             console.log(response);
         }
 
         function initWorker() {
             worker = new Worker("pngquant/worker.js");
-            worker.onmessage = function(event) {
+            worker.onmessage = function (event) {
                 const message = event.data;
                 if (message.type == "stdout") {
                     console.log(message.data);
@@ -154,7 +156,7 @@ const HEIGHT = 800;
                 } else if (message.type == "done") {
                     console.log("Conversion is done");
                     var buffers = message.data;
-                    buffers && buffers.forEach(function(file) {
+                    buffers && buffers.forEach(function (file) {
                         $('#output-img').src = getDownloadLink(file.data, 'output.png');
                     });
                 }
@@ -186,7 +188,21 @@ const HEIGHT = 800;
 
         }
 
-        window.addEventListener('click', saveData);
+        function handleCameraClick(){
+            updating = false;
+            recordButton.style.visibility = 'hidden';
+            acceptUI.style.visibility = 'visible';
+        }
+
+        function resumeRecording(){
+            updating = true;
+            recordButton.style.visibility = 'visible';
+            acceptUI.style.visibility = 'hidden';
+        }
+
+        acceptButton.addEventListener('click', saveData);
+        rejectButton.addEventListener('click', resumeRecording);
+        recordButton.addEventListener('click', handleCameraClick);
 
     })
 })();
