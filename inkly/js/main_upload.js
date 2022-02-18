@@ -19,6 +19,8 @@ console.log('Config', Config);
     let updating = true;
     window.addEventListener('DOMContentLoaded', async () => {
         const recordButton = document.getElementById('recordButton');
+        const selectFileButton = document.getElementById('selectFileButton');
+        const fileSelector = document.getElementById('fileSelector');
         const acceptUI = document.getElementById('accept_ui');
         const acceptButton = document.getElementById('accept');
         const rejectButton = document.getElementById('reject');
@@ -210,20 +212,56 @@ console.log('Config', Config);
 
         function handleCameraClick(){
             updating = false;
+            selectFileButton.style.visibility = 'hidden';
             recordButton.style.visibility = 'hidden';
             acceptUI.style.visibility = 'visible';
         }
 
+        function handleUploadClick() {
+            updating = false;
+            fileSelector.click();
+        }
+
+        function handleFileChange() {
+            const file = fileSelector.files[0];
+            const fr = new FileReader();
+            fr.onload = (ev => {
+                const img = new Image();
+                img.onload = (ev1) => {
+                    console.log('Drawing image on ', ctx);
+                    // get the scale
+                    const scale = Math.max(canvas.width / img.width, canvas.height / img.height);
+                    // get the top left position of the image
+                    const x = (canvas.width / 2) - (img.width / 2) * scale;
+                    const y = (canvas.height / 2) - (img.height / 2) * scale;
+                    ctx.drawImage(img, x, y, img.width * scale, img.height * scale);
+                    process();
+                    handleCameraClick();
+                    fileSelector.value = "";
+                };
+                img.src = fr.result;
+            });   // onload fires after reading is complete
+            fr.readAsDataURL(file);    // begin reading
+        }
+
+        function handleFileCancel() {
+            updating = true;
+        }
+
         function resumeRecording(){
             updating = true;
+            selectFileButton.style.visibility = 'visible';
             recordButton.style.visibility = 'visible';
             acceptUI.style.visibility = 'hidden';
         }
 
+
         acceptButton.addEventListener('click', saveData);
         rejectButton.addEventListener('click', resumeRecording);
         recordButton.addEventListener('click', handleCameraClick);
-
+        selectFileButton.addEventListener('click', handleUploadClick);
+        fileSelector.addEventListener('change', handleFileChange);
+        fileSelector.addEventListener('cancel', handleFileCancel);
     })
 })();
 
