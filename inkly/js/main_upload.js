@@ -1,5 +1,20 @@
 const WIDTH = 480;
 const HEIGHT = 800;
+
+const params = new Proxy(new URLSearchParams(window.location.search), {
+    get: (searchParams, prop) => searchParams.get(prop),
+});
+
+const filename = params?.filename;
+
+const Config = {
+     USE_DITHER : params?.dither === 'true',
+     FILENAME : filename || 'test.png',
+     IMAGE_FORMAT : filename?.indexOf('.jpg') ? 'image/jpeg' : 'image/png',
+}
+
+console.log('Config', Config);
+
 (function () {
     let updating = true;
     window.addEventListener('DOMContentLoaded', async () => {
@@ -104,10 +119,9 @@ const HEIGHT = 800;
 
         function process() {
             const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-            //bradleyThresholder.setImageData(imageData);
-            //bradleyThresholder.process();
-            //autoluma(imageData, 0.5, canvas.width, canvas.height);
-            monochrome(imageData, 0.5);
+            if (Config.USE_DITHER) {
+                monochrome(imageData, 0.5);
+            }
             ctxOut.putImageData(imageData, 0, 0);
         }
 
@@ -130,11 +144,11 @@ const HEIGHT = 800;
             // we’re done with the rotating so restore the unrotated context
             context.restore();
             //var data = rotateCanvas.toBmp();
-            const dataString = rotateCanvas.toDataURL('image/png');
+            const dataString = rotateCanvas.toDataURL(Config.IMAGE_FORMAT,0.5);
             const blob = dataURItoBlob(dataString);
             //saveAs(blob, "test.png");
             const data = new FormData()
-            const fileOfBlob = new File([blob], 'test.png');
+            const fileOfBlob = new File([blob], Config.FILENAME);
             data.append('image', fileOfBlob)
             const response = await fetch('https://www.bas-horsting.com/einkupload/upload', {
                 method: 'POST',
@@ -156,8 +170,14 @@ const HEIGHT = 800;
                 } else if (message.type == "done") {
                     console.log("Conversion is done");
                     var buffers = message.data;
-                    buffers && buffers.forEach(function (file) {
-                        $('#output-img').src = getDownloadLink(file.data, 'output.png');
+                    buffers && buffers.forEach(async (file) => {
+                        const response = await fetch('https://www.bas-horsting.com/einkupload/upload', {
+                            method: 'POST',
+                            mode: 'no-cors',
+                            body: file.data
+                        });
+                        console.log(response);
+                        resumeRecording();
                     });
                 }
             };
