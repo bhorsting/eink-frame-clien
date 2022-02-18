@@ -1,5 +1,5 @@
-const WIDTH = 480;
-const HEIGHT = 800;
+const WIDTH = 540;
+const HEIGHT = 960;
 
 const params = new Proxy(new URLSearchParams(window.location.search), {
     get: (searchParams, prop) => searchParams.get(prop),
