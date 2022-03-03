@@ -1,5 +1,9 @@
-const WIDTH = 540;
-const HEIGHT = 960;
+let einkWidth = 540;
+let einkHeight = 960;
+
+const ditherjs = new DitherJS([,{
+    algorithm: 'atkinson'
+}]);
 
 const params = new Proxy(new URLSearchParams(window.location.search), {
     get: (searchParams, prop) => searchParams.get(prop),
@@ -7,10 +11,23 @@ const params = new Proxy(new URLSearchParams(window.location.search), {
 
 const filename = params?.filename;
 
+if (params?.width && params?.height) {
+    einkWidth = parseInt(params.width);
+    einkHeight = parseInt(params.height);
+}
+
+let imageFormat = 'image/jpeg';
+if (filename?.indexOf('.png')>-1) {
+    imageFormat = 'image/png';
+} else if (filename?.indexOf('.bmp')>-1) {
+    imageFormat = 'image/bmp';
+}
+
 const Config = {
      USE_DITHER : params?.dither === 'true',
+     COLOR_DITHER: params?.colordither === 'true',
      FILENAME : filename || 'test.png',
-     IMAGE_FORMAT : filename?.indexOf('.jpg') ? 'image/jpeg' : 'image/png',
+     IMAGE_FORMAT : imageFormat,
 }
 
 console.log('Config', Config);
@@ -100,10 +117,10 @@ console.log('Config', Config);
                 video.play();
                 setInterval(() => {
                     if (updating) {
-                        canvas.width = WIDTH;
-                        canvas.height = HEIGHT;
-                        outputCanvas.width = WIDTH;
-                        outputCanvas.height = HEIGHT;
+                        canvas.width = einkWidth;
+                        canvas.height = einkHeight;
+                        outputCanvas.width = einkWidth;
+                        outputCanvas.height = einkHeight;
                         // get the scale
                         const scale = Math.max(canvas.width / video.videoWidth, canvas.height / video.videoHeight);
                         // get the top left position of the image
@@ -122,9 +139,25 @@ console.log('Config', Config);
         function process() {
             const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
             if (Config.USE_DITHER) {
-                monochrome(imageData, 0.5);
+                if (Config.COLOR_DITHER) {
+                    ditherjs.ditherImageData(imageData);
+                } else {
+                    monochrome(imageData, 0.5);
+                }
             }
             ctxOut.putImageData(imageData, 0, 0);
+        }
+
+        async function canvasToBmpBlob(canvas) {
+            return new Promise((resolve, reject) => {
+                try {
+                    CanvasToBMP.toBlob(canvas, (blob)=>{
+                        resolve(blob);
+                    });
+                } catch (e) {
+                    reject(e);
+                }
+            });
         }
 
         async function saveData() {
@@ -145,9 +178,14 @@ console.log('Config', Config);
             context.drawImage(outputCanvas, -outputCanvas.width / 2, -outputCanvas.height / 2);
             // we’re done with the rotating so restore the unrotated context
             context.restore();
-            //var data = rotateCanvas.toBmp();
-            const dataString = rotateCanvas.toDataURL(Config.IMAGE_FORMAT,0.5);
-            const blob = dataURItoBlob(dataString);
+            let blob;
+            if (imageFormat === 'image/bmp') {
+                console.log('Saving BMP...');
+                blob = await canvasToBmpBlob(rotateCanvas);
+            } else {
+                const dataString = rotateCanvas.toDataURL(Config.IMAGE_FORMAT,0.5);
+                blob = dataURItoBlob(dataString);
+            }
             //saveAs(blob, "test.png");
             const data = new FormData()
             const fileOfBlob = new File([blob], Config.FILENAME);
