@@ -2,7 +2,7 @@ let einkWidth = 540;
 let einkHeight = 960;
 
 const ditherjs = new DitherJS([,{
-    algorithm: 'atkinson'
+    algorithm: 'diffusion'
 }]);
 
 const params = new Proxy(new URLSearchParams(window.location.search), {
@@ -71,6 +71,11 @@ console.log('Config', Config);
             div.innerText = txt;
             document.body.appendChild(div);
         }
+
+        canvas.width = einkWidth;
+        canvas.height = einkHeight;
+        outputCanvas.width = einkWidth;
+        outputCanvas.height = einkHeight;
 
         if (navigator.getUserMedia) { // Standard
 
