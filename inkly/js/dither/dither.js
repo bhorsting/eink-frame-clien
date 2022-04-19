@@ -14,7 +14,6 @@ utils.defaultPalette = [
     [255, 0, 0],     /*RED*/
     [255, 247, 0],   /*YELLOW*/
     [255, 123, 0],   /*ORANGE*/
-    [255, 126, 221]  /*MAGENTA*/
 ];
 
 utils.errors = {
@@ -254,6 +253,7 @@ DitherJS.prototype.ditherImageData = function ditherImageData(imageData, options
         ditherFn = DitherJS.atkinsonDither;
     else
         throw utils.errors.InvalidAlgorithm;
+
 
     var startTime;
     if (options.debug) {
